@@ -1,0 +1,85 @@
+<resources>
+    <string name="app_name">plankr</string>
+    <string name="tagline">Plank whenever you like. Every second counts.</string>
+    <string name="track_heading">Your plank challenge</string>
+    <string name="ready_to_track">Ready for your next plank?</string>
+    <string name="tracking_now">Holding your plank</string>
+    <string name="elapsed_time">Current plank time</string>
+    <string name="elapsed_time_value">Current plank time: %1$s</string>
+    <string name="today_label">PLANKED TODAY</string>
+    <string name="monthly_goal_heading">This month’s challenge</string>
+    <string name="monthly_goal_target">60 minutes of planking</string>
+    <string name="remaining_this_month">Time left this month</string>
+    <string name="monthly_goal_reached">Monthly goal reached!</string>
+    <string name="monthly_goal_done">Completed!</string>
+    <string name="monthly_extra_label">Beyond your goal — strong work</string>
+    <string name="monthly_progress_initial">0s of 1h planked this month</string>
+    <string name="monthly_progress">%1$s of 1h planked this month</string>
+    <string name="monthly_extra">%1$s beyond your goal</string>
+    <string name="minutes">Minutes</string>
+    <string name="seconds">Seconds</string>
+    <string name="start_seconds">Start seconds (0–59)</string>
+    <string name="end_seconds">End seconds (0–59)</string>
+    <string name="invalid_seconds">Seconds must be between 0 and 59.</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="calendar_heading">Your plank history</string>
+    <string name="calendar_hint">Dots mark days you planked. Tap a date to review.</string>
+    <string name="sessions_heading">Planks on this day</string>
+    <string name="track_tab">Plank</string>
+    <string name="track_live_tab">Plank · Live</string>
+    <string name="calendar_tab">Calendar</string>
+    <string name="previous_month">Previous month</string>
+    <string name="next_month">Next month</string>
+    <string name="tracked_day">%1$s, plank time logged</string>
+    <string name="selected_day">%1$s, selected</string>
+    <string name="start_working">Start plank</string>
+    <string name="finish_work">Finish plank</string>
+    <string name="start_hint">One tap to start when you’re ready.</string>
+    <string name="finish_hint">Tap the large button to finish.</string>
+    <string name="session_complete">✓ Great work — %1$s planked!</string>
+    <string name="day_total">%1$s planked</string>
+    <string name="no_sessions">No planks logged on this day yet.</string>
+    <string name="in_progress">%1$s – now · Planking</string>
+    <string name="session_range">%1$s – %2$s · %3$s</string>
+    <string name="edit_session">Edit</string>
+    <string name="delete_session">Delete</string>
+    <string name="edit_session_title">Edit plank</string>
+    <string name="delete_session_title">Delete plank?</string>
+    <string name="delete_session_message">This plank will be removed from your monthly total. This can’t be undone.</string>
+    <string name="session_start">START</string>
+    <string name="session_end">END</string>
+    <string name="edit_start_date">Change start date</string>
+    <string name="edit_start_time">Change start time</string>
+    <string name="edit_end_date">Change end date</string>
+    <string name="edit_end_time">Change end time</string>
+    <string name="invalid_session_order">End must be after start.</string>
+    <string name="invalid_session_future">A completed session can’t end in the future.</string>
+    <string name="invalid_session_overlap">This time overlaps another timed plank, or the active timer. Check the dates and times.</string>
+    <string name="session_change_failed">Couldn’t save the change. Please try again.</string>
+    <string name="edit_session_description">Edit session starting %1$s</string>
+    <string name="delete_session_description">Delete session starting %1$s</string>
+
+    <string name="quote_with_author">%1$s — %2$s</string>
+    <string name="quote_author">— %1$s</string>
+    <!-- https://en.wikiquote.org/wiki/William_James (1908 letter to Helen Keller) -->
+    <string name="plank_quote_james">Act as if what you do makes a difference. It does.</string>
+    <string name="plank_quote_author_james">William James</string>
+    <!-- https://founders.archives.gov/documents/Franklin/01-02-02-0028 (Poor Richard, 1737) -->
+    <string name="plank_quote_franklin">Well done is better than well said.</string>
+    <string name="plank_quote_author_franklin">Benjamin Franklin</string>
+    <!-- https://en.wikiquote.org/wiki/Epictetus (Discourses II.18.4) -->
+    <string name="plank_quote_epictetus">Whatever you would make habitual, practice it.</string>
+    <string name="plank_quote_author_epictetus">Epictetus</string>
+    <!-- https://en.wikiquote.org/wiki/Virgil (Aeneid V.231) -->
+    <string name="plank_quote_virgil">They can because they think they can.</string>
+    <string name="plank_quote_author_virgil">Virgil</string>
+    <!-- https://www.ameliaearhart.com/quotes/ -->
+    <string name="plank_quote_earhart">The most effective way to do it is to do it.</string>
+    <string name="plank_quote_author_earhart">Amelia Earhart</string>
+    <!-- https://en.wikiquote.org/wiki/Helen_Keller (Optimism, 1903) -->
+    <string name="plank_quote_keller">Optimism is the faith that leads to achievement.</string>
+    <string name="plank_quote_author_keller">Helen Keller</string>
+    <string name="plank_quote_oderwie">..oder wie oder wat??</string>
+
+</resources>

@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 98 everyday and mental-arithmetic prompts; six attributed quotes, one featured quote,
+         and two recall prompts are added to the same random pool in TrackingScreen (107 items total). -->
+    <string-array name="plank_questions">
+        <!-- Today and food (20) -->
+        <item>What did you eat for breakfast?</item>
+        <item>What did you eat for lunch?</item>
+        <item>What did you eat for dinner?</item>
+        <item>What was your last snack?</item>
+        <item>What was the most colorful food you ate today?</item>
+        <item>What was the best meal you had this week?</item>
+        <item>What flavor are you craving right now?</item>
+        <item>What is your favorite comfort meal?</item>
+        <item>What new dish would you like to try?</item>
+        <item>What food reminds you of home?</item>
+        <item>What was the first thing you drank today?</item>
+        <item>What smell did you notice today?</item>
+        <item>What sound did you enjoy today?</item>
+        <item>What made you smile today?</item>
+        <item>What was your nicest conversation today?</item>
+        <item>What kind thing did someone do for you recently?</item>
+        <item>What did you learn today?</item>
+        <item>What are you proud of today?</item>
+        <item>What would you do differently about today?</item>
+        <item>How was your day in three words?</item>
+
+        <!-- Plans (20) -->
+        <item>What do you plan to do this weekend?</item>
+        <item>What would make tomorrow morning pleasant?</item>
+        <item>What will you do on your next free afternoon?</item>
+        <item>Who would you like to catch up with?</item>
+        <item>What place would you like to visit soon?</item>
+        <item>What is one small goal for this week?</item>
+        <item>When could you take a break next week?</item>
+        <item>What book would you like to read next?</item>
+        <item>What movie would you like to watch?</item>
+        <item>What music would you like to play later?</item>
+        <item>What hobby would you like to revisit?</item>
+        <item>What skill would you like to learn?</item>
+        <item>Who would you like to thank this week?</item>
+        <item>How would you like to unwind tonight?</item>
+        <item>What would you do on your next day off?</item>
+        <item>What is one task you want to finish this week?</item>
+        <item>What would you like more of next month?</item>
+        <item>What small habit would you like to begin?</item>
+        <item>Where would you like to take a walk?</item>
+        <item>How would you spend a free hour tomorrow?</item>
+
+        <!-- Memory and surroundings (18) -->
+        <item>Where did you park your car?</item>
+        <item>What color was a car you saw today?</item>
+        <item>What was the last song you heard?</item>
+        <item>What was the weather like earlier today?</item>
+        <item>What was the last message you sent?</item>
+        <item>What item did you put down recently?</item>
+        <item>Who did you speak to yesterday?</item>
+        <item>What did you wear yesterday?</item>
+        <item>What did you do just before opening this app?</item>
+        <item>What was the last photo you took?</item>
+        <item>What was the last thing you bought?</item>
+        <item>Which route would you take home from here?</item>
+        <item>What was the first thing you saw this morning?</item>
+        <item>What place have you visited this month?</item>
+        <item>What made you laugh recently?</item>
+        <item>What new word did you learn recently?</item>
+        <item>What were you looking forward to yesterday?</item>
+        <item>Where did you last leave your keys?</item>
+
+        <!-- Imagination and preferences (20) -->
+        <item>Where is your favorite place to sit quietly?</item>
+        <item>If you could walk anywhere after this, where would you go?</item>
+        <item>What is your favorite season, and why?</item>
+        <item>What would be your ideal weekend breakfast?</item>
+        <item>Which place would you love to revisit?</item>
+        <item>What skill could you teach a friend?</item>
+        <item>What are three things you are grateful for?</item>
+        <item>What would you do with an extra hour today?</item>
+        <item>What small treat would you enjoy later?</item>
+        <item>What does your ideal day off look like?</item>
+        <item>What is your favorite smell outdoors?</item>
+        <item>Which song could you hum from memory?</item>
+        <item>What would your future self thank you for?</item>
+        <item>Who inspires you to try something new?</item>
+        <item>Where do you feel most at home?</item>
+        <item>What helps you feel calm?</item>
+        <item>What is the best view you have seen lately?</item>
+        <item>Which hobby makes you lose track of time?</item>
+        <item>What makes a weekend feel restful to you?</item>
+        <item>What would you say to a friend doing this plank?</item>
+
+        <!-- Mental arithmetic (20) -->
+        <item>What is 7 + 8?</item>
+        <item>What is 23 + 19?</item>
+        <item>What is 48 − 17?</item>
+        <item>What is 90 − 36?</item>
+        <item>What is 6 × 7?</item>
+        <item>What is 9 × 8?</item>
+        <item>What is 12 × 4?</item>
+        <item>What is 56 ÷ 7?</item>
+        <item>What is 81 ÷ 9?</item>
+        <item>What is double 17?</item>
+        <item>What is half of 86?</item>
+        <item>What is 15 + 27?</item>
+        <item>What is 100 − 58?</item>
+        <item>What is 14 × 3?</item>
+        <item>What is 72 ÷ 8?</item>
+        <item>What is 25 + 36?</item>
+        <item>What is 63 − 28?</item>
+        <item>What is 11 × 6?</item>
+        <item>What is 96 ÷ 12?</item>
+        <item>What is 3 × 15 + 2?</item>
+    </string-array>
+
+    <!-- Only eligible directly after a question; displayed ten seconds later. -->
+    <string-array name="plank_recall_questions">
+        <item>What was the question 10 seconds ago?</item>
+        <item>What was the question again?</item>
+    </string-array>
+</resources>

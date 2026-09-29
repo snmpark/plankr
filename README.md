@@ -11,6 +11,7 @@ plankr is a n Android fitness app with a simple challenge: hold a plank for a to
 ## Features
 
 - **Plank timer:** Start and finish a plank with one large button. An active session keeps accruing time while the app is closed; its start timestamp is saved and elapsed time is calculated when you return.
+- **Accidental-tap protection:** Repeat button presses within two seconds are ignored. Sub-second planks already in your history display as `<1s` instead of `0s`.
 - **Plank anytime:** Start the timer whenever you train. Only sessions actually recorded in the app count toward the challenge—no manual entries.
 - **Monthly challenge:** Track progress toward 60 minutes each calendar month. Remaining time updates to the second; the total starts fresh on the first day of each month without deleting past planks.
 - **Monthly progress:** The challenge card shows time remaining, progress toward the goal, and any extra time beyond it.

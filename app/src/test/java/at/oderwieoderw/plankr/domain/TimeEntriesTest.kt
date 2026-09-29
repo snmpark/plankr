@@ -31,6 +31,14 @@ class TimeEntriesTest {
     }
 
     @Test
+    fun subSecondSessionsAccumulateWithoutRoundingEachSession() {
+        val start = date(2026, 9, 29, 9)
+        val entries = listOf(TimeEntry(start, start + 400), TimeEntry(start + 500, start + 1_100))
+        assertEquals(1_000L, TimeEntries.totalForDay(entries, start))
+        assertEquals(1_000L, TimeEntries.totalForMonth(entries, start))
+    }
+
+    @Test
     fun sessionEndingAtMidnightDoesNotMarkTheNextDay() {
         val entry = TimeEntry(date(2026, 9, 28, 23), date(2026, 9, 29, 0))
         assertEquals(0L, TimeEntries.totalForDay(listOf(entry), date(2026, 9, 29, 12)))

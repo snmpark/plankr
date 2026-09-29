@@ -15,6 +15,7 @@ import at.oderwieoderw.plankr.data.local.TimeEntryStore
 import at.oderwieoderw.plankr.domain.TimeEntries
 import at.oderwieoderw.plankr.domain.TimeEntry
 import at.oderwieoderw.plankr.domain.MonthlyMotivation
+import at.oderwieoderw.plankr.domain.RapidTapProtection
 import at.oderwieoderw.plankr.ui.TimeFormatting
 
 /** Owns the plank timer and monthly challenge. */
@@ -66,7 +67,7 @@ class TrackingScreen(
 
     private var feedbackUntil = 0L
     private var completedDuration = 0L
-    private var lastActionAt = 0L
+    private var lastActionAt: Long? = null
     private var displayedSession: Long? = null
     private var currentMessage: ActiveMessage? = null
     private var nextMessage: ActiveMessage? = null
@@ -75,10 +76,12 @@ class TrackingScreen(
     init {
         sessionButton.setOnClickListener {
             val actionAt = SystemClock.elapsedRealtime()
-            if (actionAt - lastActionAt < 700L) return@setOnClickListener
-            lastActionAt = actionAt
             val now = System.currentTimeMillis()
             val active = store.activeStart
+            if (RapidTapProtection.blocks(actionAt, lastActionAt, now, active)) {
+                return@setOnClickListener
+            }
+            lastActionAt = actionAt
             if (active == null) {
                 feedbackUntil = 0L
                 actionHint.animate().cancel()

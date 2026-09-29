@@ -1,21 +1,24 @@
 package at.oderwieoderw.plankr.data.local
 
 import android.content.Context
+import android.provider.Settings
+import at.oderwieoderw.plankr.domain.PlankTiming
 import at.oderwieoderw.plankr.domain.TimeEntries
 import at.oderwieoderw.plankr.domain.TimeEntry
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 
-/** Small on-device store; the active session is saved as soon as Start is pressed. */
+/** Small on-device store; the active session is saved as soon as the start hold completes. */
 class TimeEntryStore(context: Context) {
     private val preferences = context.getSharedPreferences("time_entries", Context.MODE_PRIVATE)
+    private val resolver = context.contentResolver
+    private val currentBootCount by lazy {
+        Settings.Global.getInt(resolver, Settings.Global.BOOT_COUNT, -1)
+    }
 
-    var activeStart: Long?
+    val activeStart: Long?
         get() = preferences.getLong("active_start", -1L).takeIf { it >= 0L }
-        private set(value) {
-            preferences.edit().putLong("active_start", value ?: -1L).commit()
-        }
 
     fun entries(): List<TimeEntry> {
         val json = try {
@@ -39,26 +42,60 @@ class TimeEntryStore(context: Context) {
         }
     }
 
-    fun start(now: Long) {
-        if (activeStart == null) activeStart = now
+    /** Elapsed milliseconds for the active session, or zero when idle. */
+    fun activeDuration(nowWallMillis: Long, nowElapsedMillis: Long): Long {
+        val start = activeStart ?: return 0L
+        val startElapsed = preferences.getLong("active_elapsed_start", -1L).takeIf { it >= 0L }
+        val startBoot = preferences.getInt("active_boot_count", -1).takeIf { it >= 0 }
+        return PlankTiming.duration(
+            startWallMillis = start,
+            startElapsedMillis = startElapsed,
+            startBootCount = startBoot,
+            nowWallMillis = nowWallMillis,
+            nowElapsedMillis = nowElapsedMillis,
+            nowBootCount = currentBootCount
+        )
     }
 
-    fun stop(now: Long) {
-        val start = activeStart ?: return
-        if (now <= start) return
-        // Save the completed session and clear the active one together.
-        preferences.edit().putString("entries", serialize(entries() + TimeEntry(start, now)))
-            .putLong("active_start", -1L).commit()
+    /** Persists both clocks when the start hold completes; does nothing if already active. */
+    fun start(nowWallMillis: Long, nowElapsedMillis: Long) {
+        if (activeStart != null) return
+        preferences.edit()
+            .putLong("active_start", nowWallMillis)
+            .putLong("active_elapsed_start", nowElapsedMillis)
+            .putInt("active_boot_count", currentBootCount)
+            .commit()
+    }
+
+    /**
+     * Clears the active timer and saves its exact positive duration.
+     * Returns null if idle, no time elapsed, or the disk write failed.
+     */
+    fun stop(nowWallMillis: Long, nowElapsedMillis: Long): TimeEntry? {
+        val start = activeStart ?: return null
+        val duration = activeDuration(nowWallMillis, nowElapsedMillis)
+        // Anchor the interval to its original calendar start, even if the wall clock changed.
+        val entry = if (duration > 0L) TimeEntry(start, start + duration) else null
+        // An attempt with no elapsed time has nothing to save. Clear the timer either way.
+        val edit = preferences.edit()
+            .putLong("active_start", -1L)
+            .remove("active_elapsed_start")
+            .remove("active_boot_count")
+        if (entry != null) edit.putString("entries", serialize(entries() + entry))
+        return if (edit.commit()) entry else null
     }
 
     fun updateEntry(index: Int, original: TimeEntry, replacement: TimeEntry): Boolean {
         val saved = entries()
         val active = activeStart
-        if (saved.getOrNull(index) != original ||
+        if (
+            saved.getOrNull(index) != original ||
             !TimeEntries.canReplace(saved, index, replacement) ||
             replacement.end > System.currentTimeMillis() ||
             (active != null && replacement.end > active)
-        ) return false
+        ) {
+            return false
+        }
         val updated = saved.toMutableList().apply { this[index] = replacement }
         return saveEntries(updated)
     }

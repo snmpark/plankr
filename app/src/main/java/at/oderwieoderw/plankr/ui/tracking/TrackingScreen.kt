@@ -12,10 +12,9 @@ import android.widget.TextView
 import androidx.activity.ComponentActivity
 import at.oderwieoderw.plankr.R
 import at.oderwieoderw.plankr.data.local.TimeEntryStore
+import at.oderwieoderw.plankr.domain.MonthlyMotivation
 import at.oderwieoderw.plankr.domain.TimeEntries
 import at.oderwieoderw.plankr.domain.TimeEntry
-import at.oderwieoderw.plankr.domain.MonthlyMotivation
-import at.oderwieoderw.plankr.domain.RapidTapProtection
 import at.oderwieoderw.plankr.ui.TimeFormatting
 
 /** Owns the plank timer and monthly challenge. */
@@ -25,6 +24,7 @@ class TrackingScreen(
     private val onChanged: () -> Unit
 ) {
     private data class PlankQuote(val text: Int, val author: Int)
+
     private data class ActiveMessage(
         val text: String,
         val author: String? = null,
@@ -47,11 +47,26 @@ class TrackingScreen(
         PlankQuote(R.string.plank_quote_earhart, R.string.plank_quote_author_earhart),
         PlankQuote(R.string.plank_quote_keller, R.string.plank_quote_author_keller)
     )
-    private val featuredQuote = ActiveMessage(activity.getString(R.string.plank_quote_oderwie), isQuote = true)
-    private val activeMessages = activeQuotes.map {
-        ActiveMessage(activity.getString(it.text), activity.getString(it.author), isQuote = true)
-    } + featuredQuote + activity.resources.getStringArray(R.array.plank_questions).map { ActiveMessage(it) } +
-        activity.resources.getStringArray(R.array.plank_recall_questions).map { ActiveMessage(it, isRecall = true) }
+    private val featuredQuote =
+        ActiveMessage(activity.getString(R.string.plank_quote_oderwie), isQuote = true)
+    private val activeMessages = buildList {
+        activeQuotes.forEach { quote ->
+            add(
+                ActiveMessage(
+                    text = activity.getString(quote.text),
+                    author = activity.getString(quote.author),
+                    isQuote = true
+                )
+            )
+        }
+        add(featuredQuote)
+        activity.resources.getStringArray(R.array.plank_questions).forEach { question ->
+            add(ActiveMessage(question))
+        }
+        activity.resources.getStringArray(R.array.plank_recall_questions).forEach { question ->
+            add(ActiveMessage(question, isRecall = true))
+        }
+    }
     private val trackPage: View = activity.findViewById(R.id.track_page)
     private val actionContainer: FrameLayout = activity.findViewById(R.id.session_action_container)
     private val actionTitle: TextView = activity.findViewById(R.id.session_action_title)
@@ -67,66 +82,90 @@ class TrackingScreen(
 
     private var feedbackUntil = 0L
     private var completedDuration = 0L
-    private var lastActionAt: Long? = null
     private var displayedSession: Long? = null
     private var currentMessage: ActiveMessage? = null
     private var nextMessage: ActiveMessage? = null
     private var nextMessageAt = 0L
 
     init {
-        sessionButton.setOnClickListener {
-            val actionAt = SystemClock.elapsedRealtime()
-            val now = System.currentTimeMillis()
-            val active = store.activeStart
-            if (RapidTapProtection.blocks(actionAt, lastActionAt, now, active)) {
-                return@setOnClickListener
-            }
-            lastActionAt = actionAt
-            if (active == null) {
-                feedbackUntil = 0L
-                actionHint.animate().cancel()
-                actionHint.alpha = 1f
-                store.start(now)
-            } else {
-                store.stop(now)
-                if (store.activeStart == null) {
-                    completedDuration = now - active
-                    feedbackUntil = now + 6_000L
-                }
-            }
-            if ((store.activeStart != null) != (active != null)) {
-                sessionButton.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-            }
-            onChanged()
-            actionContainer.animate().cancel()
-            actionContainer.scaleX = 0.98f
-            actionContainer.scaleY = 0.98f
-            actionContainer.animate().scaleX(1f).scaleY(1f).setDuration(180L).start()
-            if (active != null && store.activeStart == null) {
-                actionHint.animate().cancel()
-                actionHint.alpha = 0f
-                actionHint.animate().alpha(1f).setDuration(300L).start()
-            }
+        sessionButton.setOnLongClickListener {
+            startSession()
+            // Consume the hold so releasing the button does not also trigger Finish.
+            true
         }
+        sessionButton.setOnClickListener { finishSession() }
     }
 
-    fun render(now: Long, entries: List<TimeEntry>, active: Long?) {
+    private fun startSession() {
+        if (store.activeStart != null) return
+        val elapsedMillis = SystemClock.elapsedRealtime()
+        val wallMillis = System.currentTimeMillis()
+        store.start(nowWallMillis = wallMillis, nowElapsedMillis = elapsedMillis)
+        if (store.activeStart == null) return
+
+        feedbackUntil = 0L
+        actionHint.animate().cancel()
+        actionHint.alpha = 1f
+        updateAfterAction()
+    }
+
+    private fun finishSession() {
+        if (store.activeStart == null) return
+        val elapsedMillis = SystemClock.elapsedRealtime()
+        val wallMillis = System.currentTimeMillis()
+        val completed = store.stop(nowWallMillis = wallMillis, nowElapsedMillis = elapsedMillis)
+        if (store.activeStart != null) return
+
+        if (completed != null) {
+            completedDuration = completed.end - completed.start
+            feedbackUntil = wallMillis + COMPLETION_FEEDBACK_MILLIS
+        } else {
+            feedbackUntil = 0L
+        }
+        sessionButton.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+        updateAfterAction()
+        actionHint.animate().cancel()
+        actionHint.alpha = 0f
+        actionHint.animate().alpha(1f).setDuration(300L).start()
+    }
+
+    private fun updateAfterAction() {
+        onChanged()
+        actionContainer.animate().cancel()
+        actionContainer.scaleX = 0.98f
+        actionContainer.scaleY = 0.98f
+        actionContainer.animate().scaleX(1f).scaleY(1f).setDuration(180L).start()
+    }
+
+    fun render(now: Long, entries: List<TimeEntry>, active: Long?, activeDuration: Long) {
         trackDetails.visibility = if (active == null) View.VISIBLE else View.GONE
         renderActiveMotivation(active)
         sessionButton.isSelected = active != null
-        sessionButton.contentDescription = activity.getString(if (active == null) R.string.start_working else R.string.finish_work)
-        actionTitle.setText(if (active == null) R.string.start_working else R.string.finish_work)
-        actionIcon.setImageResource(if (active == null) R.drawable.ic_start_work else R.drawable.ic_finish_work)
+        val actionText = if (active == null) R.string.start_working else R.string.finish_work
+        sessionButton.contentDescription = activity.getString(actionText)
+        actionTitle.setText(actionText)
+        actionIcon.setImageResource(
+            if (active == null) R.drawable.ic_start_work else R.drawable.ic_finish_work
+        )
         actionHint.text = when {
             active != null -> activity.getString(R.string.finish_hint)
-            now < feedbackUntil -> activity.getString(R.string.session_complete, TimeFormatting.duration(completedDuration))
+            now < feedbackUntil -> {
+                activity.getString(
+                    R.string.session_complete,
+                    TimeFormatting.duration(completedDuration)
+                )
+            }
             else -> activity.getString(R.string.start_hint)
         }
         timerLabel.setText(if (active == null) R.string.ready_to_track else R.string.tracking_now)
-        counter.text = TimeFormatting.elapsed((now - (active ?: now)).coerceAtLeast(0L))
-        counter.contentDescription = activity.getString(R.string.elapsed_time_value, counter.text)
+        renderCounter(activeDuration)
         todayTotal.text = TimeFormatting.duration(TimeEntries.totalForDay(entries, now))
         renderMonthlyGoal(entries, now)
+    }
+
+    fun renderCounter(duration: Long) {
+        counter.text = TimeFormatting.elapsed(duration)
+        counter.contentDescription = activity.getString(R.string.elapsed_time_value, counter.text)
     }
 
     private fun renderActiveMotivation(active: Long?) {
@@ -180,7 +219,10 @@ class TrackingScreen(
         }
     }
 
-    private fun pickNextMessage(previous: ActiveMessage?, allowRecall: Boolean = true): ActiveMessage {
+    private fun pickNextMessage(
+        previous: ActiveMessage?,
+        allowRecall: Boolean = true
+    ): ActiveMessage {
         if (allowRecall && previous?.isQuestion == true && (1..5).random() == 1) {
             return activeMessages.filter { it.isRecall }.random()
         }
@@ -192,7 +234,9 @@ class TrackingScreen(
     private fun showMessage(message: ActiveMessage) {
         activeMessageText.text = message.text
         activeMessageAuthor.visibility = if (message.author == null) View.GONE else View.VISIBLE
-        message.author?.let { activeMessageAuthor.text = activity.getString(R.string.quote_author, it) }
+        message.author?.let { author ->
+            activeMessageAuthor.text = activity.getString(R.string.quote_author, author)
+        }
         activeMotivation.contentDescription = message.author?.let {
             activity.getString(R.string.quote_with_author, message.text, it)
         } ?: message.text
@@ -202,20 +246,35 @@ class TrackingScreen(
         val tracked = TimeEntries.totalForMonth(entries, now)
         val goal = MonthlyMotivation.GOAL_MILLIS
         val remaining = (goal - tracked).coerceAtLeast(0L)
-        remainingLabel.setText(when {
-            tracked > goal -> R.string.monthly_extra_label
-            remaining > 0L -> R.string.remaining_this_month
-            else -> R.string.monthly_goal_reached
-        })
-        remainingTime.text = if (remaining == 0L) activity.getString(R.string.monthly_goal_done)
-            else TimeFormatting.countdown(remaining)
+        remainingLabel.setText(
+            when {
+                tracked > goal -> R.string.monthly_extra_label
+                remaining > 0L -> R.string.remaining_this_month
+                else -> R.string.monthly_goal_reached
+            }
+        )
+        remainingTime.text = if (remaining == 0L) {
+            activity.getString(R.string.monthly_goal_done)
+        } else {
+            TimeFormatting.countdown(remaining)
+        }
         progressBar.progress = ((tracked * 100L / goal).coerceIn(0L, 100L)).toInt()
-        val progress = activity.getString(R.string.monthly_progress, TimeFormatting.duration(tracked))
+        val progress = activity.getString(
+            R.string.monthly_progress,
+            TimeFormatting.duration(tracked)
+        )
         monthlyProgress.text = if (tracked > goal) {
-            "$progress · ${activity.getString(R.string.monthly_extra, TimeFormatting.duration(tracked - goal))}"
+            val extra = activity.getString(
+                R.string.monthly_extra,
+                TimeFormatting.duration(tracked - goal)
+            )
+            "$progress · $extra"
         } else {
             progress
         }
     }
 
+    private companion object {
+        const val COMPLETION_FEEDBACK_MILLIS = 6_000L
+    }
 }

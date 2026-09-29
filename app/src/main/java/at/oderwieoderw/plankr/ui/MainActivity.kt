@@ -3,6 +3,7 @@ package at.oderwieoderw.plankr.ui
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.view.View
 import android.view.WindowManager
 import android.widget.Button
@@ -17,6 +18,7 @@ import at.oderwieoderw.plankr.domain.TimeEntry
 import at.oderwieoderw.plankr.ui.calendar.CalendarScreen
 import at.oderwieoderw.plankr.ui.tracking.TrackingScreen
 
+/** Coordinates navigation, session rendering, and lifecycle-bound timer updates. */
 class MainActivity : ComponentActivity() {
     private enum class Page { TRACK, CALENDAR }
 
@@ -32,10 +34,27 @@ class MainActivity : ComponentActivity() {
     private var currentPage = Page.TRACK
 
     private val handler = Handler(Looper.getMainLooper())
+    private var isResumed = false
+    private var isCounterRunning = false
     private val tick = object : Runnable {
         override fun run() {
             render()
-            handler.postDelayed(this, 1000L)
+            handler.postDelayed(this, SCREEN_REFRESH_MILLIS)
+        }
+    }
+    private val counterTick = object : Runnable {
+        override fun run() {
+            val active = store.activeStart
+            if (!isResumed || active == null) {
+                isCounterRunning = false
+                return
+            }
+            val duration = store.activeDuration(
+                nowWallMillis = System.currentTimeMillis(),
+                nowElapsedMillis = SystemClock.elapsedRealtime()
+            )
+            trackingScreen.renderCounter(duration)
+            handler.postDelayed(this, COUNTER_REFRESH_MILLIS)
         }
     }
 
@@ -43,7 +62,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById<View>(R.id.main_root)) { view, insets ->
+        val root = findViewById<View>(R.id.main_root)
+        ViewCompat.setOnApplyWindowInsetsListener(root) { view, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             view.setPadding(bars.left, bars.top, bars.right, bars.bottom)
             insets
@@ -51,10 +71,19 @@ class MainActivity : ComponentActivity() {
 
         store = TimeEntryStore(this)
         trackingScreen = TrackingScreen(this, store, ::render)
+        val selectedDate =
+            savedInstanceState?.getLong("selected_date") ?: System.currentTimeMillis()
         calendarScreen = CalendarScreen(
-            this, store, savedInstanceState?.getLong("selected_date") ?: System.currentTimeMillis(), ::render
+            activity = this,
+            store = store,
+            initialDate = selectedDate,
+            onChanged = ::render
         )
-        currentPage = if (savedInstanceState?.getString("page") == Page.CALENDAR.name) Page.CALENDAR else Page.TRACK
+        currentPage = if (savedInstanceState?.getString("page") == Page.CALENDAR.name) {
+            Page.CALENDAR
+        } else {
+            Page.TRACK
+        }
 
         trackPage = findViewById(R.id.track_page)
         calendarPage = findViewById(R.id.calendar_page)
@@ -63,7 +92,9 @@ class MainActivity : ComponentActivity() {
         calendarTab = findViewById(R.id.calendar_tab)
 
         backToTrack = object : OnBackPressedCallback(false) {
-            override fun handleOnBackPressed() { showPage(Page.TRACK) }
+            override fun handleOnBackPressed() {
+                showPage(Page.TRACK)
+            }
         }
         onBackPressedDispatcher.addCallback(this, backToTrack)
         trackTab.setOnClickListener { showPage(Page.TRACK) }
@@ -74,11 +105,15 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        isResumed = true
         handler.removeCallbacks(tick)
         tick.run()
     }
 
     override fun onPause() {
+        isResumed = false
+        isCounterRunning = false
+        handler.removeCallbacks(counterTick)
         handler.removeCallbacks(tick)
         super.onPause()
     }
@@ -112,11 +147,27 @@ class MainActivity : ComponentActivity() {
     private fun render() {
         val now = System.currentTimeMillis()
         val active = store.activeStart
+        val activeDuration = store.activeDuration(
+            nowWallMillis = now,
+            nowElapsedMillis = SystemClock.elapsedRealtime()
+        )
+        if (active == null) {
+            handler.removeCallbacks(counterTick)
+            isCounterRunning = false
+        } else if (isResumed && !isCounterRunning) {
+            isCounterRunning = true
+            counterTick.run()
+        }
         updateKeepScreenOn(active)
         val saved = store.entries()
-        val entries = saved + listOfNotNull(active?.let { TimeEntry(it, maxOf(now, it + 1L)) })
+        val entries = saved + listOfNotNull(active?.let { TimeEntry(it, it + activeDuration) })
         trackTab.setText(if (active == null) R.string.track_tab else R.string.track_live_tab)
-        trackingScreen.render(now, entries, active)
-        calendarScreen.render(now, saved, active)
+        trackingScreen.render(now, entries, active, activeDuration)
+        calendarScreen.render(now, saved, active, activeDuration)
+    }
+
+    private companion object {
+        const val SCREEN_REFRESH_MILLIS = 1_000L
+        const val COUNTER_REFRESH_MILLIS = 50L
     }
 }

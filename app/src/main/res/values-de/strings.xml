@@ -12,7 +12,7 @@
     <string name="monthly_goal_reached">Monatsziel erreicht!</string>
     <string name="monthly_goal_done">Geschafft!</string>
     <string name="monthly_extra_label">Über dem Ziel – starke Leistung</string>
-    <string name="monthly_progress_initial">0s von 60 Minuten diesen Monat</string>
+    <string name="monthly_progress_initial">0.000s von 60 Minuten diesen Monat</string>
     <string name="monthly_progress">%1$s von 60 Minuten diesen Monat</string>
     <string name="monthly_extra">%1$s über dem Ziel</string>
     <string name="minutes">Minuten</string>
@@ -32,9 +32,9 @@
     <string name="next_month">Nächster Monat</string>
     <string name="tracked_day">%1$s, Plankzeit erfasst</string>
     <string name="selected_day">%1$s, ausgewählt</string>
-    <string name="start_working">Plank starten</string>
+    <string name="start_working">Halten zum Starten</string>
     <string name="finish_work">Plank beenden</string>
-    <string name="start_hint">Auch wenige Sekunden bringen dich weiter.</string>
+    <string name="start_hint">Zum Starten die große Taste gedrückt halten.</string>
     <string name="finish_hint">Atme ruhig und achte auf deine Haltung.</string>
     <string name="session_complete">✓ Stark! %1$s geplankt.</string>
     <string name="day_total">%1$s geplankt</string>

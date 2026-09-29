@@ -50,12 +50,16 @@ class CalendarScreen(
         activity.findViewById<Button>(R.id.next_month).setOnClickListener { changeMonth(1) }
     }
 
-    fun render(now: Long, savedEntries: List<TimeEntry>, active: Long?) {
-        val entries = savedEntries + listOfNotNull(active?.let { TimeEntry(it, maxOf(now, it + 1L)) })
+    fun render(now: Long, savedEntries: List<TimeEntry>, active: Long?, activeDuration: Long) {
+        val activeEntry = active?.let { TimeEntry(it, it + activeDuration) }
+        val entries = savedEntries + listOfNotNull(activeEntry)
         renderCalendar(entries, now)
-        selectedDateLabel.text = SimpleDateFormat("EEEE, MMMM d", Locale.getDefault()).format(Date(selectedDate))
-        selectedTotal.text = activity.getString(R.string.day_total, TimeFormatting.duration(TimeEntries.totalForDay(entries, selectedDate)))
-        renderSessions(savedEntries, active, now)
+        selectedDateLabel.text =
+            SimpleDateFormat("EEEE, MMMM d", Locale.getDefault()).format(Date(selectedDate))
+        val dayTotal = TimeEntries.totalForDay(entries, selectedDate)
+        selectedTotal.text =
+            activity.getString(R.string.day_total, TimeFormatting.duration(dayTotal))
+        renderSessions(savedEntries, active, activeDuration, now)
     }
 
     private fun changeMonth(offset: Int) {
@@ -77,12 +81,15 @@ class CalendarScreen(
         val year = first.get(Calendar.YEAR)
         val month = first.get(Calendar.MONTH)
         val daysInMonth = first.getActualMaximum(Calendar.DAY_OF_MONTH)
-        val selectedDay = Calendar.getInstance().apply { timeInMillis = selectedDate }.get(Calendar.DAY_OF_MONTH)
+        val selectedDay = Calendar.getInstance()
+            .apply { timeInMillis = selectedDate }
+            .get(Calendar.DAY_OF_MONTH)
         val markedDays = (1..daysInMonth).filter { day ->
             first.set(Calendar.DAY_OF_MONTH, day)
             TimeEntries.totalForDay(entries, first.timeInMillis) > 0L
         }.toSet()
-        val key = "$year:$month:$selectedDay:${markedDays.joinToString(",")}:${TimeEntries.dayBounds(now).first}"
+        val todayStart = TimeEntries.dayBounds(now).first
+        val key = "$year:$month:$selectedDay:${markedDays.joinToString(",")}:$todayStart"
         if (key == renderedCalendarKey) return
         renderedCalendarKey = key
 
@@ -103,7 +110,6 @@ class CalendarScreen(
         }
 
         val leadingDays = (first.get(Calendar.DAY_OF_WEEK) - weekStart + 7) % 7
-        val todayStart = TimeEntries.dayBounds(now).first
         val dateLabelFormat = SimpleDateFormat("EEEE, MMMM d, yyyy", Locale.getDefault())
         val cellCount = ((leadingDays + daysInMonth + 6) / 7) * 7
         for (index in 0 until cellCount) {
@@ -120,13 +126,21 @@ class CalendarScreen(
             val isToday = TimeEntries.dayBounds(date).first == todayStart
             val hasTime = day in markedDays
             val label = dateLabelFormat.format(Date(date))
-            val description = if (hasTime) activity.getString(R.string.tracked_day, label) else label
+            val description = if (hasTime) {
+                activity.getString(R.string.tracked_day, label)
+            } else {
+                label
+            }
             grid.addView(LinearLayout(activity).apply {
                 orientation = LinearLayout.VERTICAL
                 gravity = Gravity.CENTER
                 layoutParams = gridParams(row, column, 52)
                 if (isSelected) setBackgroundResource(R.drawable.selected_day_background)
-                contentDescription = if (isSelected) activity.getString(R.string.selected_day, description) else description
+                contentDescription = if (isSelected) {
+                    activity.getString(R.string.selected_day, description)
+                } else {
+                    description
+                }
                 isClickable = true
                 isFocusable = true
                 setOnClickListener {
@@ -137,7 +151,8 @@ class CalendarScreen(
                     text = day.toString()
                     gravity = Gravity.CENTER
                     textSize = 16f
-                    setTextColor(activity.getColor(if (isToday || isSelected) R.color.accent else R.color.ink))
+                    val textColor = if (isToday || isSelected) R.color.accent else R.color.ink
+                    setTextColor(activity.getColor(textColor))
                     importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
                 })
                 addView(TextView(activity).apply {
@@ -152,7 +167,12 @@ class CalendarScreen(
         }
     }
 
-    private fun renderSessions(savedEntries: List<TimeEntry>, active: Long?, now: Long) {
+    private fun renderSessions(
+        savedEntries: List<TimeEntry>,
+        active: Long?,
+        activeDuration: Long,
+        now: Long
+    ) {
         val (dayStart, nextDayStart) = TimeEntries.dayBounds(selectedDate)
         val key = SessionRenderKey(dayStart, TimeEntries.dayBounds(now).first, savedEntries, active)
         if (key == renderedSessions) return
@@ -161,20 +181,20 @@ class CalendarScreen(
         val dayEntries = savedEntries.withIndex()
             .filter { TimeEntries.overlap(it.value, dayStart, nextDayStart) > 0L }
             .sortedByDescending { it.value.start }
-        val activeEntry = active?.let { TimeEntry(it, maxOf(now, it + 1L)) }
+        val activeEntry = active?.let { TimeEntry(it, it + activeDuration) }
             ?.takeIf { TimeEntries.overlap(it, dayStart, nextDayStart) > 0L }
         if (dayEntries.isEmpty() && activeEntry == null) {
             sessionList.addView(sessionRow(activity.getString(R.string.no_sessions)))
         } else {
-            val timeFormat = DateFormat.getTimeInstance(DateFormat.MEDIUM)
             if (activeEntry != null) {
-                val start = timeFormat.format(Date(maxOf(activeEntry.start, dayStart)))
+                val start = TimeFormatting.timeOfDay(maxOf(activeEntry.start, dayStart))
                 sessionList.addView(sessionRow(activity.getString(R.string.in_progress, start)))
             }
             dayEntries.forEach { (index, entry) ->
-                val start = timeFormat.format(Date(maxOf(entry.start, dayStart)))
-                val end = timeFormat.format(Date(minOf(entry.end, nextDayStart)))
-                val duration = TimeFormatting.duration(TimeEntries.overlap(entry, dayStart, nextDayStart))
+                val start = TimeFormatting.timeOfDay(maxOf(entry.start, dayStart))
+                val end = TimeFormatting.timeOfDay(minOf(entry.end, nextDayStart))
+                val overlap = TimeEntries.overlap(entry, dayStart, nextDayStart)
+                val duration = TimeFormatting.duration(overlap)
                 val text = activity.getString(R.string.session_range, start, end, duration)
                 sessionList.addView(editableSessionRow(text, index, entry))
             }
@@ -187,7 +207,8 @@ class CalendarScreen(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply { bottomMargin = (8 * activity.resources.displayMetrics.density).toInt() }
             findViewById<TextView>(R.id.session_description).text = text
-            val start = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(entry.start))
+            val date = DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date(entry.start))
+            val start = "$date ${TimeFormatting.timeOfDay(entry.start)}"
             findViewById<Button>(R.id.edit_session).apply {
                 contentDescription = activity.getString(R.string.edit_session_description, start)
                 setOnClickListener { dialogs.showEditor(index, entry) }

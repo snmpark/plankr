@@ -13,7 +13,7 @@
     <string name="monthly_goal_reached">Monthly goal reached!</string>
     <string name="monthly_goal_done">Completed!</string>
     <string name="monthly_extra_label">Beyond your goal — strong work</string>
-    <string name="monthly_progress_initial">0s of 1h planked this month</string>
+    <string name="monthly_progress_initial">0.000s of 1h planked this month</string>
     <string name="monthly_progress">%1$s of 1h planked this month</string>
     <string name="monthly_extra">%1$s beyond your goal</string>
     <string name="minutes">Minutes</string>
@@ -33,9 +33,9 @@
     <string name="next_month">Next month</string>
     <string name="tracked_day">%1$s, plank time logged</string>
     <string name="selected_day">%1$s, selected</string>
-    <string name="start_working">Start plank</string>
+    <string name="start_working">Hold to start plank</string>
     <string name="finish_work">Finish plank</string>
-    <string name="start_hint">One tap to start when you’re ready.</string>
+    <string name="start_hint">Press and hold the large button to start.</string>
     <string name="finish_hint">Tap the large button to finish.</string>
     <string name="session_complete">✓ Great work — %1$s planked!</string>
     <string name="day_total">%1$s planked</string>

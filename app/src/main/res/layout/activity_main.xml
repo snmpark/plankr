@@ -62,7 +62,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="0h 00m"
+                        android:text="0.000s"
                         android:textColor="@color/accent"
                         android:textSize="25sp"
                         android:textStyle="bold" />
@@ -106,9 +106,9 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="1h 00m 00s"
+                        android:text="1h 00m 00.000s"
                         android:textColor="@color/accent"
-                        android:textSize="32sp"
+                        android:textSize="26sp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -306,9 +306,9 @@
             android:layout_marginTop="4dp"
             android:contentDescription="@string/elapsed_time"
             android:gravity="center"
-            android:text="00:00:00"
+            android:text="00:00:00.000"
             android:textColor="@color/ink"
-            android:textSize="46sp"
+            android:textSize="36sp"
             android:textStyle="bold" />
 
         <FrameLayout

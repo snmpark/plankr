@@ -12,6 +12,7 @@ import androidx.activity.ComponentActivity
 import at.oderwieoderw.plankr.R
 import at.oderwieoderw.plankr.data.local.TimeEntryStore
 import at.oderwieoderw.plankr.domain.TimeEntry
+import at.oderwieoderw.plankr.ui.TimeFormatting
 import java.text.DateFormat
 import java.util.Calendar
 
@@ -84,7 +85,7 @@ internal class SessionDialogs(
                                     dateDescription: Int, timeDescription: Int) {
         fun refreshLabels() {
             dateButton.text = DateFormat.getDateInstance(DateFormat.SHORT).format(calendar.time)
-            timeButton.text = DateFormat.getTimeInstance(DateFormat.SHORT).format(calendar.time)
+            timeButton.text = TimeFormatting.timeOfDay(calendar.timeInMillis)
             dateButton.contentDescription = "${activity.getString(dateDescription)}: ${dateButton.text}"
             timeButton.contentDescription = "${activity.getString(timeDescription)}: ${timeButton.text}"
         }
